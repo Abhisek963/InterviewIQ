@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Build & Dist
+frontend/dist/
+frontend/node_modules/
+*.egg-info/
+.pytest_cache/
+
+# Databases & Uploads
+*.db
+backend/interviewiq.db
+backend/uploads/
+uploads/
+
+# Environment Variables
+.env
+*.env.local
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
