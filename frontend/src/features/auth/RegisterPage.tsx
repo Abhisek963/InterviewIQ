@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { Brain, Lock, Mail, User, GraduationCap, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { Target, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
@@ -18,7 +17,7 @@ export const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email) {
-      setError('Please fill in required fields');
+      setError('Full name and email are required');
       return;
     }
     setError('');
@@ -37,91 +36,166 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl mx-auto flex items-center justify-center mb-3 font-bold">
-            <Brain className="w-7 h-7" />
+    <div
+      style={{
+        minHeight: 'calc(100vh - 3.5rem)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'var(--space-6)',
+        background: 'var(--color-paper)',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          background: 'var(--color-white)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          padding: 'var(--space-8)',
+        }}
+      >
+        {/* Brand mark */}
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              background: 'var(--color-ink)',
+              borderRadius: '6px',
+              marginBottom: 'var(--space-4)',
+            }}
+          >
+            <Target size={18} color="var(--color-lime)" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Create Account</h2>
-          <p className="text-sm text-slate-500 mt-1">Start preparing for campus placements</p>
+          <h1
+            style={{
+              margin: '0 0 var(--space-1)',
+              fontSize: '1.375rem',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: 'var(--color-ink)',
+            }}
+          >
+            Create account
+          </h1>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-muted)' }}>
+            Start preparing for campus placements
+          </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              background: '#FEF2F2',
+              border: '1px solid rgba(185,56,50,0.2)',
+              borderRadius: '6px',
+              marginBottom: 'var(--space-4)',
+              fontSize: '0.875rem',
+              color: 'var(--color-error)',
+            }}
+          >
+            <AlertCircle size={14} />
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-            <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Morgan"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="reg-name">Full name</label>
+            <input
+              id="reg-name"
+              type="text"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Alex Morgan"
+              className="form-input"
+              autoComplete="name"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex@university.edu"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="reg-email">Email address</label>
+            <input
+              id="reg-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="alex@university.edu"
+              className="form-input"
+              autoComplete="email"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">College / University</label>
-            <div className="relative">
-              <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="text"
-                value={collegeName}
-                onChange={(e) => setCollegeName(e.target.value)}
-                placeholder="Institute of Technology"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="reg-college">
+              College / University <span style={{ color: 'var(--color-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            </label>
+            <input
+              id="reg-college"
+              type="text"
+              value={collegeName}
+              onChange={(e) => setCollegeName(e.target.value)}
+              placeholder="Institute of Technology"
+              className="form-input"
+              autoComplete="organization"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="reg-password">Password</label>
+            <input
+              id="reg-password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="form-input"
+              autoComplete="new-password"
+            />
           </div>
 
-          <Button type="submit" isLoading={loading} className="w-full py-2.5">
-            <span>Register Account</span>
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            aria-busy={loading}
+            className="btn btn-primary"
+            style={{ justifyContent: 'center', marginTop: 'var(--space-2)' }}
+          >
+            {loading ? (
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            ) : (
+              <>Create account <ArrowRight size={14} /></>
+            )}
+          </button>
         </form>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '0.8125rem',
+            color: 'var(--color-muted)',
+            marginTop: 'var(--space-5)',
+          }}
+        >
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">
+          <Link
+            to="/login"
+            style={{ color: 'var(--color-forest)', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+          >
             Sign in
           </Link>
         </p>

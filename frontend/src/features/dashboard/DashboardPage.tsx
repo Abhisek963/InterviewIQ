@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
 import { InterviewSession, Resume, InterviewReport } from '../../types';
-import { Card, Badge, ProgressBar } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Sparkles, FileText, History, Trophy, Clock, CheckCircle2, ArrowRight, Play, Award, BarChart2 } from 'lucide-react';
+import { Badge, ProgressBar } from '../../components/ui/Card';
+import {
+  Play, FileText, History, Trophy, BarChart2,
+  CheckCircle, ArrowRight, ChevronRight, Plus, Clock
+} from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -22,13 +24,13 @@ export const DashboardPage: React.FC = () => {
         const [sList, rList, repList] = await Promise.all([
           api.listInterviews(),
           api.listResumes(),
-          api.listReports()
+          api.listReports(),
         ]);
         setSessions(sList);
         setResumes(rList);
         setReports(repList);
       } catch (err) {
-        console.error('Failed to load dashboard data:', err);
+        console.error('Dashboard load error:', err);
       } finally {
         setLoading(false);
       }
@@ -36,205 +38,471 @@ export const DashboardPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const completedSessions = sessions.filter(s => s.status === 'completed');
-  const validScores = reports.map(r => r.overall_score).filter((s): s is number => s !== undefined && s !== null);
-  const avgScore = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 0;
+  const completedSessions = sessions.filter((s) => s.status === 'completed');
+  const validScores = reports
+    .map((r) => r.overall_score)
+    .filter((s): s is number => s !== undefined && s !== null);
+  const avgScore =
+    validScores.length > 0
+      ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length)
+      : null;
+
+  const readinessLabel =
+    avgScore === null
+      ? 'No data yet'
+      : avgScore >= 80
+      ? 'High readiness'
+      : avgScore >= 60
+      ? 'Moderate'
+      : 'Building';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div style={{ background: 'var(--color-paper)', minHeight: 'calc(100vh - 3.5rem)' }}>
+      <div className="container" style={{ paddingTop: 'var(--space-8)', paddingBottom: 'var(--space-12)' }}>
+
+        {/* ── TOP BAR ───────────────────────────────────────────────────── */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 'var(--space-4)',
+            marginBottom: 'var(--space-8)',
+            flexWrap: 'wrap',
+          }}
+        >
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-indigo-200 text-xs font-semibold mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Campus Placement Readiness Hub</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Welcome back, {user?.full_name || 'Candidate'}!
-            </h1>
-            <p className="text-indigo-200 text-sm mt-1 max-w-xl">
-              {user?.college_name ? `${user.college_name} • ` : ''}
-              Prepare for technical rounds, behavioral interviews, and top company placements.
+            <p className="eyebrow" style={{ marginBottom: 'var(--space-2)' }}>
+              {user?.college_name || 'Practice Hub'}
             </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Link
-              to="/interview/new"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-900 font-semibold text-sm rounded-xl hover:bg-indigo-50 shadow-md transition-all"
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 400,
+                lineHeight: 1.2,
+                color: 'var(--color-ink)',
+              }}
             >
-              <Play className="w-4 h-4 fill-indigo-900" />
-              <span>Start New Interview</span>
-            </Link>
+              Welcome back, {user?.full_name?.split(' ')[0] || 'Candidate'}.
+            </h1>
           </div>
+          <Link to="/interview/new" className="btn btn-primary btn-lg">
+            <Play size={15} strokeWidth={3} />
+            Start new interview
+          </Link>
         </div>
-      </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-            <Trophy className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Average Performance</p>
-            <p className="text-2xl font-extrabold text-slate-900">{avgScore > 0 ? `${avgScore}/100` : 'N/A'}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Completed Sessions</p>
-            <p className="text-2xl font-extrabold text-slate-900">{completedSessions.length}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Parsed Resumes</p>
-            <p className="text-2xl font-extrabold text-slate-900">{resumes.length}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold">
-            <BarChart2 className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Placement Readiness</p>
-            <p className="text-2xl font-extrabold text-slate-900">{avgScore >= 80 ? 'High' : avgScore >= 60 ? 'Moderate' : 'Building'}</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Interviews */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <History className="w-5 h-5 text-indigo-600" />
-              <span>Recent Interview Sessions</span>
-            </h2>
-            <Link to="/history" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-              <span>View all</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {loading ? (
-            <Card className="p-8 text-center text-slate-400">Loading sessions...</Card>
-          ) : sessions.length === 0 ? (
-            <Card className="p-10 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center">
-                <Sparkles className="w-6 h-6" />
+        {/* ── METRIC ROW ────────────────────────────────────────────────── */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 'var(--space-4)',
+            marginBottom: 'var(--space-8)',
+          }}
+          className="metric-grid"
+        >
+          {[
+            {
+              icon: <Trophy size={18} />,
+              label: 'Average score',
+              value: avgScore !== null ? `${avgScore}` : '—',
+              sub: avgScore !== null ? '/ 100' : 'No sessions yet',
+              accent: 'var(--color-forest)',
+            },
+            {
+              icon: <CheckCircle size={18} />,
+              label: 'Completed sessions',
+              value: String(completedSessions.length),
+              sub: sessions.length > 0 ? `of ${sessions.length} total` : 'Start practising',
+              accent: 'var(--color-success)',
+            },
+            {
+              icon: <FileText size={18} />,
+              label: 'Parsed resumes',
+              value: String(resumes.filter((r) => r.status === 'ready').length),
+              sub: resumes.length > 0 ? `${resumes.length} uploaded` : 'Upload a resume',
+              accent: '#C49A20',
+            },
+            {
+              icon: <BarChart2 size={18} />,
+              label: 'Placement readiness',
+              value: avgScore !== null ? (avgScore >= 80 ? '↑' : avgScore >= 60 ? '~' : '↗') : '—',
+              sub: readinessLabel,
+              accent: 'var(--color-forest)',
+            },
+          ].map((metric, i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--color-white)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                padding: 'var(--space-5)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-3)' }}>
+                <span style={{ color: metric.accent }}>{metric.icon}</span>
               </div>
-              <h3 className="font-bold text-slate-800">No Interview Sessions Yet</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Upload your resume, configure your target company and role, and complete your first AI mock interview.
-              </p>
-              <div className="pt-2">
-                <Link to="/resumes">
-                  <Button size="sm">Upload Resume & Get Started</Button>
-                </Link>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: '2.25rem',
+                  lineHeight: 1,
+                  color: 'var(--color-ink)',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {metric.value}
               </div>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {sessions.slice(0, 5).map(session => {
-                const report = reports.find(r => r.session_id === session.id);
-                return (
-                  <Card key={session.id} className="flex items-center justify-between p-5">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900">{session.company_name}</span>
-                        <span className="text-slate-400 text-xs">•</span>
-                        <span className="text-xs font-medium text-slate-600">{session.job_title}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Badge variant={session.status === 'completed' ? 'green' : session.status === 'in_progress' ? 'indigo' : 'slate'}>
-                          {session.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                        <span>{session.interview_type} round</span>
-                        <span>•</span>
-                        <span>{session.duration_minutes} mins</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      {session.status === 'completed' && report ? (
-                        <Link to={`/report/${session.id}`}>
-                          <Button size="sm" variant="outline" className="gap-1.5">
-                            <Award className="w-4 h-4 text-indigo-600" />
-                            <span>Score: {report.overall_score || 0}/100</span>
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Link to={`/interview/room/${session.id}`}>
-                          <Button size="sm" className="gap-1.5">
-                            <Play className="w-3.5 h-3.5" />
-                            <span>{session.status === 'in_progress' ? 'Resume' : 'Start'}</span>
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
+              <p className="mono-label text-muted" style={{ marginBottom: '2px' }}>{metric.label}</p>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted)', margin: 0 }}>{metric.sub}</p>
             </div>
-          )}
+          ))}
         </div>
 
-        {/* Sidebar Status */}
-        <div className="space-y-6">
-          <Card className="space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" />
-              <span>Resume Status</span>
-            </h3>
+        {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--space-6)' }} className="dash-grid">
 
-            {resumes.length === 0 ? (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-2">
-                <p className="font-semibold">No Resume Uploaded</p>
-                <p className="text-amber-700">Upload a PDF or DOCX resume so the AI can craft questions targeting your actual projects.</p>
-                <Link to="/resumes" className="inline-block pt-1 font-bold text-indigo-700 hover:underline">
-                  Upload Resume →
+          {/* Recent Sessions */}
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 'var(--space-4)',
+              }}
+            >
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: '1.0625rem',
+                  fontWeight: 600,
+                  color: 'var(--color-ink)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <History size={16} color="var(--color-muted)" />
+                Recent interviews
+              </h2>
+              <Link
+                to="/history"
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  color: 'var(--color-forest)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  textDecoration: 'none',
+                }}
+              >
+                View all <ArrowRight size={13} />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-white)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+                <p className="mono-label text-muted">Loading sessions…</p>
+              </div>
+            ) : sessions.length === 0 ? (
+              /* Empty state */
+              <div
+                style={{
+                  background: 'var(--color-white)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  padding: 'var(--space-10)',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 'var(--space-4)',
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'var(--color-forest-light)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Play size={20} color="var(--color-forest)" />
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 var(--space-2)', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    No interviews yet
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-muted)', maxWidth: '320px' }}>
+                    Upload a resume, choose your target role, and complete your first AI mock interview.
+                  </p>
+                </div>
+                <Link to={resumes.length === 0 ? '/resumes' : '/interview/new'} className="btn btn-primary btn-sm">
+                  {resumes.length === 0 ? 'Upload resume first' : 'Start your first interview'}
+                  <ChevronRight size={13} />
                 </Link>
               </div>
             ) : (
-              <div className="space-y-3">
-                {resumes.slice(0, 2).map(r => (
-                  <div key={r.id} className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
-                    <div className="truncate max-w-[180px]">
-                      <p className="font-semibold text-slate-800 truncate">{r.original_filename}</p>
-                      <p className="text-slate-400 text-[10px]">{r.parsed_profile?.skills?.length || 0} skills extracted</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                {sessions.slice(0, 5).map((session) => {
+                  const report = reports.find((r) => r.session_id === session.id);
+                  const statusColors: Record<string, string> = {
+                    completed: 'var(--color-success)',
+                    in_progress: '#C49A20',
+                    created: 'var(--color-muted)',
+                    abandoned: 'var(--color-error)',
+                  };
+
+                  return (
+                    <div
+                      key={session.id}
+                      style={{
+                        background: 'var(--color-white)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        padding: 'var(--space-4) var(--space-5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 'var(--space-4)',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-ink)' }}>
+                            {session.company_name}
+                          </span>
+                          <span style={{ color: 'var(--color-border)' }}>·</span>
+                          <span style={{ fontSize: '0.875rem', color: 'var(--color-muted)' }}>{session.job_title}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.625rem',
+                              fontWeight: 600,
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                              color: statusColors[session.status] || 'var(--color-muted)',
+                            }}
+                          >
+                            {session.status.replace('_', ' ')}
+                          </span>
+                          <span style={{ color: 'var(--color-border)', fontSize: '0.75rem' }}>·</span>
+                          <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Clock size={11} />
+                            {session.duration_minutes}m
+                          </span>
+                          <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted)' }}>
+                            {session.interview_type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        {session.status === 'completed' && report ? (
+                          <Link
+                            to={`/report/${session.id}`}
+                            className="btn btn-outline btn-sm"
+                            style={{ gap: '0.375rem' }}
+                          >
+                            <Trophy size={12} color="var(--color-forest)" />
+                            {report.overall_score ?? '—'}/100
+                          </Link>
+                        ) : (
+                          <Link
+                            to={`/interview/room/${session.id}`}
+                            className="btn btn-primary btn-sm"
+                          >
+                            {session.status === 'in_progress' ? 'Resume' : 'Start'}
+                            <Play size={11} strokeWidth={3} />
+                          </Link>
+                        )}
+                      </div>
                     </div>
-                    <Badge variant="green">Ready</Badge>
-                  </div>
-                ))}
-                <Link to="/resumes" className="block text-center text-xs font-semibold text-indigo-600 hover:underline pt-1">
-                  Manage Resumes
-                </Link>
+                  );
+                })}
               </div>
             )}
-          </Card>
+          </div>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-slate-50 border-indigo-100 p-5 space-y-3">
-            <h4 className="font-bold text-indigo-900 text-sm">Placement Prep Tip</h4>
-            <p className="text-xs text-indigo-950/80 leading-relaxed">
-              Target Technical & System Design interviews with 20-minute sessions to practice time management before real campus interviews.
-            </p>
-          </Card>
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+            {/* Resume status */}
+            <div
+              style={{
+                background: 'var(--color-white)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                padding: 'var(--space-5)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+                <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={14} color="var(--color-muted)" />
+                  Resumes
+                </h3>
+                <Link to="/resumes" className="btn btn-ghost btn-sm" style={{ padding: '0.25rem 0.5rem' }}>
+                  <Plus size={13} />
+                  Add
+                </Link>
+              </div>
+
+              {resumes.length === 0 ? (
+                <div
+                  style={{
+                    padding: 'var(--space-4)',
+                    background: 'var(--color-paper)',
+                    borderRadius: '6px',
+                    border: '1px solid var(--color-border)',
+                    fontSize: '0.8125rem',
+                    color: 'var(--color-muted)',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <p style={{ margin: '0 0 var(--space-3)', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    No resume uploaded
+                  </p>
+                  <p style={{ margin: '0 0 var(--space-3)' }}>
+                    Upload a PDF or DOCX so the AI can build questions around your actual projects.
+                  </p>
+                  <Link to="/resumes" style={{ color: 'var(--color-forest)', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                    Upload now →
+                  </Link>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  {resumes.slice(0, 3).map((r) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.625rem 0.875rem',
+                        background: 'var(--color-paper)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '0.8125rem',
+                            fontWeight: 500,
+                            color: 'var(--color-ink)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '160px',
+                          }}
+                        >
+                          {r.original_filename}
+                        </p>
+                        <p className="mono-label text-muted" style={{ marginTop: '2px' }}>
+                          {r.parsed_profile?.skills?.length || 0} skills
+                        </p>
+                      </div>
+                      <Badge variant={r.status === 'ready' ? 'forest' : 'muted'}>
+                        {r.status}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Link
+                    to="/resumes"
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--color-forest)',
+                      fontWeight: 500,
+                      textAlign: 'center',
+                      padding: 'var(--space-2)',
+                      display: 'block',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Manage resumes →
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Score breakdown if data exists */}
+            {reports.length > 0 && avgScore !== null && (
+              <div
+                style={{
+                  background: 'var(--color-ink)',
+                  color: 'var(--color-white)',
+                  borderRadius: '8px',
+                  padding: 'var(--space-5)',
+                }}
+              >
+                <p className="mono-label" style={{ color: 'var(--color-lime)', marginBottom: 'var(--space-3)' }}>
+                  YOUR AVERAGE SCORE
+                </p>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '3.5rem',
+                    lineHeight: 1,
+                    marginBottom: 'var(--space-3)',
+                  }}
+                >
+                  {avgScore}
+                  <span style={{ fontSize: '1.25rem', opacity: 0.5 }}>/100</span>
+                </div>
+                <div className="progress-track" style={{ height: '6px', background: 'rgba(255,255,255,0.1)' }}>
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${avgScore}%`, background: 'var(--color-lime)' }}
+                  />
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.55)', marginTop: 'var(--space-3)', marginBottom: 0 }}>
+                  Based on {completedSessions.length} completed {completedSessions.length === 1 ? 'interview' : 'interviews'}
+                </p>
+              </div>
+            )}
+
+            {/* Practice tip */}
+            <div
+              style={{
+                background: 'var(--color-forest-light)',
+                border: '1px solid rgba(23,76,60,0.15)',
+                borderRadius: '8px',
+                padding: 'var(--space-5)',
+              }}
+            >
+              <p className="mono-label" style={{ color: 'var(--color-forest)', marginBottom: 'var(--space-2)' }}>
+                TIP
+              </p>
+              <p style={{ fontSize: '0.875rem', lineHeight: 1.65, color: 'var(--color-ink)', margin: 0 }}>
+                Use 20-minute Technical sessions to practise time management before real campus interviews. 
+                Aim for 30+ words per answer.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Responsive grid styles */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .metric-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .metric-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 };

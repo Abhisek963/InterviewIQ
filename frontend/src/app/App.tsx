@@ -9,7 +9,7 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AppProviders>
-        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500 selection:text-white">
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--color-paper)', color: 'var(--color-ink)' }}>
           <Navbar />
           <main className="flex-1">
             <AppRouter />

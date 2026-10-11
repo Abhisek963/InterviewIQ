@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { Brain, Lock, Mail, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { Target, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +15,7 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError('Please enter your email address');
+      setError('Email address is required');
       return;
     }
     setError('');
@@ -25,7 +24,7 @@ export const LoginPage: React.FC = () => {
       await login(email);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Sign in failed');
     } finally {
       setLoading(false);
     }
@@ -36,86 +35,168 @@ export const LoginPage: React.FC = () => {
     try {
       await login('student.demo@interviewiq.ai', 'Student Candidate');
       navigate('/dashboard');
-    } catch (err: any) {
-      setError('Demo login failed');
+    } catch {
+      setError('Demo sign in failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl mx-auto flex items-center justify-center mb-3 font-bold">
-            <Brain className="w-7 h-7" />
+    <div
+      style={{
+        minHeight: 'calc(100vh - 3.5rem)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'var(--space-6)',
+        background: 'var(--color-paper)',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          background: 'var(--color-white)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          padding: 'var(--space-8)',
+        }}
+      >
+        {/* Brand mark */}
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              background: 'var(--color-ink)',
+              borderRadius: '6px',
+              marginBottom: 'var(--space-4)',
+            }}
+          >
+            <Target size={18} color="var(--color-lime)" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
-          <p className="text-sm text-slate-500 mt-1">Sign in to your InterviewIQ account</p>
+          <h1
+            style={{
+              margin: '0 0 var(--space-1)',
+              fontSize: '1.375rem',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: 'var(--color-ink)',
+            }}
+          >
+            Welcome back
+          </h1>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-muted)' }}>
+            Sign in to your InterviewIQ account
+          </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              background: '#FEF2F2',
+              border: '1px solid rgba(185,56,50,0.2)',
+              borderRadius: '6px',
+              marginBottom: 'var(--space-4)',
+              fontSize: '0.875rem',
+              color: 'var(--color-error)',
+            }}
+          >
+            <AlertCircle size={14} />
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@university.edu"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="login-email">Email address</label>
+            <input
+              id="login-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="student@university.edu"
+              className="form-input"
+              autoComplete="email"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <label className="form-label" htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="form-input"
+              autoComplete="current-password"
+            />
           </div>
 
-          <Button type="submit" isLoading={loading} className="w-full py-2.5">
-            <span>Sign In</span>
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            aria-busy={loading}
+            className="btn btn-primary"
+            style={{ justifyContent: 'center', marginTop: 'var(--space-2)' }}
+          >
+            {loading ? (
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            ) : (
+              <>Sign in <ArrowRight size={14} /></>
+            )}
+          </button>
         </form>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-          <div className="relative flex justify-center text-xs text-slate-400"><span className="bg-white px-2">OR</span></div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-3)',
+            margin: 'var(--space-5) 0',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
+          <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
         </div>
 
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={handleDemoLogin}
-          isLoading={loading}
-          className="w-full text-xs font-semibold py-2.5"
+          disabled={loading}
+          className="btn btn-outline"
+          style={{ width: '100%', justifyContent: 'center' }}
         >
-          Instant Demo Sign In (No Setup Required)
-        </Button>
+          Instant demo — no setup required
+        </button>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-700">
-            Create account
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '0.8125rem',
+            color: 'var(--color-muted)',
+            marginTop: 'var(--space-5)',
+          }}
+        >
+          No account?{' '}
+          <Link
+            to="/register"
+            style={{ color: 'var(--color-forest)', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+          >
+            Create one free
           </Link>
         </p>
       </div>
