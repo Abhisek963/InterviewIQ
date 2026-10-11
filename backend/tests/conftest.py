@@ -1,3 +1,10 @@
+import os
+
+# Guarantee tests run strictly against in-memory SQLite and never touch external network
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["LLM_PROVIDER"] = "mock"
+os.environ["MOCK_AI_MODE"] = "true"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

@@ -1,11 +1,47 @@
 import { UserProfile, Resume, InterviewSession, InterviewQuestion, InterviewReport } from '../types';
+import { supabase } from './supabase';
 
 const API_BASE = '/api/v1';
 
+let cachedToken: string | null = null;
+
+// Synchronize with Supabase auth session in real time
+if (typeof window !== 'undefined') {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.access_token) {
+      cachedToken = session.access_token;
+    }
+  });
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedToken = session?.access_token || null;
+  });
+}
+
 function getAuthHeader(): Record<string, string> {
-  const devToken = localStorage.getItem('interviewiq_dev_token') || 'dev-token-student-001';
+  let token = cachedToken;
+
+  // Fallback to localStorage Supabase session
+  if (!token && typeof window !== 'undefined') {
+    try {
+      const keys = Object.keys(localStorage);
+      const sbKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      if (sbKey) {
+        const parsed = JSON.parse(localStorage.getItem(sbKey) || '{}');
+        token = parsed?.access_token || parsed?.currentSession?.access_token || null;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Fallback to dev token if in demo mode
+  if (!token) {
+    token = localStorage.getItem('interviewiq_dev_token') || 'dev-token-student-001';
+  }
+
   return {
-    Authorization: `Bearer ${devToken}`
+    Authorization: `Bearer ${token}`
   };
 }
 

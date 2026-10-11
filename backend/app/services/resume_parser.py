@@ -1,6 +1,6 @@
 import os
 import re
-import fitz  # PyMuPDF
+import pymupdf
 import docx
 from typing import Dict, Any, List
 from app.core.config import settings
@@ -11,7 +11,7 @@ class ResumeParserService:
     def extract_text_from_pdf(file_path: str) -> str:
         text = ""
         try:
-            doc = fitz.open(file_path)
+            doc = pymupdf.open(file_path)
             for page in doc:
                 text += page.get_text() + "\n"
             doc.close()

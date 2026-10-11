@@ -9,19 +9,19 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      setError('Email address is required');
+    if (!email || !password) {
+      setError('Please enter both your email address and password');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      await login(email);
+      await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Sign in failed');
@@ -32,8 +32,9 @@ export const LoginPage: React.FC = () => {
 
   const handleDemoLogin = async () => {
     setLoading(true);
+    setError('');
     try {
-      await login('student.demo@interviewiq.ai', 'Student Candidate');
+      await demoLogin();
       navigate('/dashboard');
     } catch {
       setError('Demo sign in failed');
@@ -135,6 +136,7 @@ export const LoginPage: React.FC = () => {
             <input
               id="login-password"
               type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"

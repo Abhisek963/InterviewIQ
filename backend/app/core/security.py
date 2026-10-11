@@ -24,29 +24,45 @@ def verify_token(token: str) -> UserPayload:
         user_id = token.replace("dev-token-", "") if token.startswith("dev-token-") else "00000000-0000-0000-0000-000000000001"
         return UserPayload(id=user_id, email=f"dev-{user_id[:8]}@interviewiq.ai")
         
+    # Decode Supabase JWT token
+    # Supabase uses HS256 algorithm with SUPABASE_JWT_SECRET (either UTF-8 string or base64 bytes)
+    payload = None
     try:
-        # Decode Supabase JWT token
-        # Supabase uses HS256 algorithm with SUPABASE_JWT_SECRET
         payload = jwt.decode(
             token,
             settings.SUPABASE_JWT_SECRET,
             algorithms=["HS256"],
             options={"verify_aud": False}
         )
+    except jwt.PyJWTError:
+        try:
+            import base64
+            decoded_secret = base64.b64decode(settings.SUPABASE_JWT_SECRET)
+            payload = jwt.decode(
+                token,
+                decoded_secret,
+                algorithms=["HS256"],
+                options={"verify_aud": False}
+            )
+        except Exception:
+            pass
+
+    if payload:
         user_id = payload.get("sub")
         email = payload.get("email")
         if not user_id:
             raise UnauthorizedException("Invalid token payload: missing sub")
         return UserPayload(id=user_id, email=email)
-    except jwt.PyJWTError as e:
-        # Fallback for unverified JWT in dev mode if secret is default
-        if settings.SUPABASE_JWT_SECRET == "dev-secret-key-change-in-production-1234567890":
-            try:
-                # Unverified decode for smooth local development setup
-                payload = jwt.decode(token, options={"verify_signature": False})
-                user_id = payload.get("sub", "00000000-0000-0000-0000-000000000001")
-                email = payload.get("email", "student@interviewiq.ai")
-                return UserPayload(id=user_id, email=email)
-            except Exception:
-                pass
-        raise UnauthorizedException(f"Token validation failed: {str(e)}")
+
+    # Fallback for unverified JWT in dev mode if secret is default
+    if settings.SUPABASE_JWT_SECRET == "dev-secret-key-change-in-production-1234567890":
+        try:
+            # Unverified decode for smooth local development setup
+            unverified = jwt.decode(token, options={"verify_signature": False})
+            user_id = unverified.get("sub", "00000000-0000-0000-0000-000000000001")
+            email = unverified.get("email", "student@interviewiq.ai")
+            return UserPayload(id=user_id, email=email)
+        except Exception:
+            pass
+
+    raise UnauthorizedException("Token validation failed: invalid or expired signature")
